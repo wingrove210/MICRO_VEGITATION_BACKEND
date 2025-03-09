@@ -1,17 +1,34 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from typing import AsyncGenerator
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import declarative_base
+from core.config import settings
+from sqlalchemy import MetaData
 
-# Настройка подключения к базе данных
-DATABASE_URL = "sqlite:///./test.db"  # Укажите путь к вашей базе данных
-
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+DATABASE_URL = settings.generate_database_url()
 Base = declarative_base()
+metadata = MetaData()
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+engine = create_async_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_size=settings.DB_POOL_SIZE,
+    max_overflow=settings.DB_POOL_MAX_OVERFLOW,
+    pool_timeout=settings.DB_POOL_PRE_PING_TIMEOUT,
+    pool_recycle=settings.DB_POOL_RECYCLE,
+    echo=settings.DB_ECHO
+)
+
+async_session_maker = async_sessionmaker(
+    engine, 
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autocommit=False,
+    autoflush=False
+)
+
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    async with async_sessionmaker as session:
+        try:
+            yield session
+        finally:
+            await session.close()

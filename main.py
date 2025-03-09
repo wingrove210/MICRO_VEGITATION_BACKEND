@@ -1,21 +1,16 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from routers.product_router import product_router
-from database import Base, engine
-# Создание таблиц в базе данных
-Base.metadata.create_all(bind=engine)
+import asyncio
+import os
 
-app = FastAPI()
+async def start_server():
+    from uvicorn import Config, Server
+    config = Config("app:app", port=8000, host="0.0.0.0", reload=True)
+    server = Server(config)
+    await server.serve()
+    
+async def start_bot():
+    pass
 
-# Настройка CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Подключение маршрутов
-app.include_router(product_router, prefix="/product", tags=["Products"])
-
+async def main():
+    os.environ.clear()
+    if __name__ == "__main__":
+        asyncio.run(main())

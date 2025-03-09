@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean
-from database import Base
+from sqlalchemy import Column, Integer, String, Float, Boolean, MetaData
+from sqlalchemy.orm import DeclarativeMeta, declarative_base
 
+Base: DeclarativeMeta = declarative_base()
+metadata = MetaData()
 class Product(Base):
     __tablename__ = "products"
 
